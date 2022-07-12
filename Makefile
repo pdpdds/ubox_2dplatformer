@@ -7,8 +7,9 @@ libs: lib ubox spman mplayer ap
 game: bin libs
 	make -C tools
 	make -C game	
+	
+openmsx: game
 	openmsx.exe -carta ./bin/platformer.rom -machine C-BIOS_MSX2
-
 
 docs:
 	make -C docs
