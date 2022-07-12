@@ -51,7 +51,6 @@ jobs:
       run: |       
         make clean
         chmod 777 -R tools/chksize
-        chmod 777 -R tools/mkdeps.py
         make game
         
     - name: Upload a Build Artifact(game)
