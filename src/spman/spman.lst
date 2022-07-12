@@ -1,0 +1,429 @@
+                              1 ;--------------------------------------------------------
+                              2 ; File Created by SDCC : free open source ANSI-C Compiler
+                              3 ; Version 4.0.0 #11528 (Linux)
+                              4 ;--------------------------------------------------------
+                              5 	.module spman
+                              6 	.optsdcc -mz80
+                              7 	
+                              8 ;--------------------------------------------------------
+                              9 ; Public variables in this module
+                             10 ;--------------------------------------------------------
+                             11 	.globl _ubox_set_sprite_pat16_flip
+                             12 	.globl _ubox_set_sprite_pat16
+                             13 	.globl _ubox_write_vm
+                             14 	.globl _sp_last_pat
+                             15 	.globl _sp_pat_map
+                             16 	.globl _sp_buffer
+                             17 	.globl _sp_fixed
+                             18 	.globl _sp_idx
+                             19 	.globl _sp_last_fixed_sprite
+                             20 	.globl _sp_last_sprite
+                             21 	.globl _spman_init
+                             22 	.globl _spman_alloc_pat
+                             23 	.globl _spman_sprite_flush
+                             24 	.globl _spman_alloc_fixed_sprite
+                             25 	.globl _spman_alloc_sprite
+                             26 	.globl _spman_update
+                             27 	.globl _spman_hide_all_sprites
+                             28 ;--------------------------------------------------------
+                             29 ; special function registers
+                             30 ;--------------------------------------------------------
+                             31 ;--------------------------------------------------------
+                             32 ; ram data
+                             33 ;--------------------------------------------------------
+                             34 	.area _DATA
+   0000                      35 _sp_last_sprite::
+   0000                      36 	.ds 1
+   0001                      37 _sp_last_fixed_sprite::
+   0001                      38 	.ds 1
+   0002                      39 _sp_idx::
+   0002                      40 	.ds 1
+   0003                      41 _sp_fixed::
+   0003                      42 	.ds 128
+   0083                      43 _sp_buffer::
+   0083                      44 	.ds 256
+   0183                      45 _sp_pat_map::
+   0183                      46 	.ds 64
+   01C3                      47 _sp_last_pat::
+   01C3                      48 	.ds 1
+   01C4                      49 _p:
+   01C4                      50 	.ds 2
+                             51 ;--------------------------------------------------------
+                             52 ; ram data
+                             53 ;--------------------------------------------------------
+                             54 	.area _INITIALIZED
+                             55 ;--------------------------------------------------------
+                             56 ; absolute external ram data
+                             57 ;--------------------------------------------------------
+                             58 	.area _DABS (ABS)
+                             59 ;--------------------------------------------------------
+                             60 ; global & static initialisations
+                             61 ;--------------------------------------------------------
+                             62 	.area _HOME
+                             63 	.area _GSINIT
+                             64 	.area _GSFINAL
+                             65 	.area _GSINIT
+                             66 ;--------------------------------------------------------
+                             67 ; Home
+                             68 ;--------------------------------------------------------
+                             69 	.area _HOME
+                             70 	.area _HOME
+                             71 ;--------------------------------------------------------
+                             72 ; code
+                             73 ;--------------------------------------------------------
+                             74 	.area _CODE
+                             75 ;spman.c:17: void spman_init()
+                             76 ;	---------------------------------
+                             77 ; Function spman_init
+                             78 ; ---------------------------------
+   0000                      79 _spman_init::
+                             80 ;spman.c:19: sp_last_pat = 0;
+   0000 FD 21rC3r01   [14]   81 	ld	iy, #_sp_last_pat
+   0004 FD 36 00 00   [19]   82 	ld	0 (iy), #0x00
+                             83 ;spman.c:20: memset(sp_pat_map, SPMAN_PAT_UNUSED, SPMAN_MAX_PATTERNS);
+   0008 21r83r01      [10]   84 	ld	hl, #_sp_pat_map
+   000B 06 20         [ 7]   85 	ld	b, #0x20
+   000D                      86 00103$:
+   000D 36 FF         [10]   87 	ld	(hl), #0xff
+   000F 23            [ 6]   88 	inc	hl
+   0010 36 FF         [10]   89 	ld	(hl), #0xff
+   0012 23            [ 6]   90 	inc	hl
+   0013 10 F8         [13]   91 	djnz	00103$
+                             92 ;spman.c:21: spman_sprite_flush();
+                             93 ;spman.c:22: }
+   0015 C3r91r00      [10]   94 	jp	_spman_sprite_flush
+                             95 ;spman.c:24: uint8_t spman_alloc_pat(uint8_t type, uint8_t *data, uint8_t len, uint8_t flip)
+                             96 ;	---------------------------------
+                             97 ; Function spman_alloc_pat
+                             98 ; ---------------------------------
+   0018                      99 _spman_alloc_pat::
+   0018 3B            [ 6]  100 	dec	sp
+                            101 ;spman.c:28: if (sp_pat_map[type] == SPMAN_PAT_UNUSED)
+   0019 01r83r01      [10]  102 	ld	bc, #_sp_pat_map+0
+   001C 79            [ 4]  103 	ld	a, c
+   001D 21 03 00      [10]  104 	ld	hl, #3
+   0020 39            [11]  105 	add	hl, sp
+   0021 86            [ 7]  106 	add	a, (hl)
+   0022 4F            [ 4]  107 	ld	c, a
+   0023 30 01         [12]  108 	jr	NC,00133$
+   0025 04            [ 4]  109 	inc	b
+   0026                     110 00133$:
+   0026 0A            [ 7]  111 	ld	a, (bc)
+   0027 3C            [ 4]  112 	inc	a
+   0028 20 61         [12]  113 	jr	NZ,00106$
+                            114 ;spman.c:30: sp_pat_map[type] = sp_last_pat;
+   002A 3ArC3r01      [13]  115 	ld	a,(#_sp_last_pat + 0)
+   002D 02            [ 7]  116 	ld	(bc), a
+                            117 ;spman.c:31: for (i = 0; i < len; ++i)
+   002E 21 04 00      [10]  118 	ld	hl, #4
+   0031 39            [11]  119 	add	hl, sp
+   0032 5E            [ 7]  120 	ld	e, (hl)
+   0033 23            [ 6]  121 	inc	hl
+   0034 56            [ 7]  122 	ld	d, (hl)
+   0035 AF            [ 4]  123 	xor	a, a
+   0036 FD 21 00 00   [14]  124 	ld	iy, #0
+   003A FD 39         [15]  125 	add	iy, sp
+   003C FD 77 00      [19]  126 	ld	0 (iy), a
+   003F                     127 00108$:
+   003F 21 06 00      [10]  128 	ld	hl, #6
+   0042 39            [11]  129 	add	hl, sp
+   0043 FD 21 00 00   [14]  130 	ld	iy, #0
+   0047 FD 39         [15]  131 	add	iy, sp
+   0049 FD 7E 00      [19]  132 	ld	a, 0 (iy)
+   004C 96            [ 7]  133 	sub	a, (hl)
+   004D 30 3C         [12]  134 	jr	NC,00106$
+                            135 ;spman.c:33: if (flip)
+   004F 21 07 00      [10]  136 	ld	hl, #7+0
+   0052 39            [11]  137 	add	hl, sp
+   0053 7E            [ 7]  138 	ld	a, (hl)
+   0054 B7            [ 4]  139 	or	a, a
+   0055 28 11         [12]  140 	jr	Z,00102$
+                            141 ;spman.c:34: ubox_set_sprite_pat16_flip(data, sp_last_pat);
+   0057 C5            [11]  142 	push	bc
+   0058 D5            [11]  143 	push	de
+   0059 3ArC3r01      [13]  144 	ld	a, (_sp_last_pat)
+   005C F5            [11]  145 	push	af
+   005D 33            [ 6]  146 	inc	sp
+   005E D5            [11]  147 	push	de
+   005F CDr00r00      [17]  148 	call	_ubox_set_sprite_pat16_flip
+   0062 F1            [10]  149 	pop	af
+   0063 33            [ 6]  150 	inc	sp
+   0064 D1            [10]  151 	pop	de
+   0065 C1            [10]  152 	pop	bc
+   0066 18 0F         [12]  153 	jr	00103$
+   0068                     154 00102$:
+                            155 ;spman.c:36: ubox_set_sprite_pat16(data, sp_last_pat);
+   0068 C5            [11]  156 	push	bc
+   0069 D5            [11]  157 	push	de
+   006A 3ArC3r01      [13]  158 	ld	a, (_sp_last_pat)
+   006D F5            [11]  159 	push	af
+   006E 33            [ 6]  160 	inc	sp
+   006F D5            [11]  161 	push	de
+   0070 CDr00r00      [17]  162 	call	_ubox_set_sprite_pat16
+   0073 F1            [10]  163 	pop	af
+   0074 33            [ 6]  164 	inc	sp
+   0075 D1            [10]  165 	pop	de
+   0076 C1            [10]  166 	pop	bc
+   0077                     167 00103$:
+                            168 ;spman.c:38: data += 32;
+   0077 21 20 00      [10]  169 	ld	hl, #0x0020
+   007A 19            [11]  170 	add	hl, de
+   007B EB            [ 4]  171 	ex	de, hl
+                            172 ;spman.c:39: sp_last_pat++;
+   007C 21rC3r01      [10]  173 	ld	hl, #_sp_last_pat+0
+   007F 34            [11]  174 	inc	(hl)
+                            175 ;spman.c:31: for (i = 0; i < len; ++i)
+   0080 FD 21 00 00   [14]  176 	ld	iy, #0
+   0084 FD 39         [15]  177 	add	iy, sp
+   0086 FD 34 00      [23]  178 	inc	0 (iy)
+   0089 18 B4         [12]  179 	jr	00108$
+   008B                     180 00106$:
+                            181 ;spman.c:47: return sp_pat_map[type] * 4;
+   008B 0A            [ 7]  182 	ld	a, (bc)
+   008C 87            [ 4]  183 	add	a, a
+   008D 87            [ 4]  184 	add	a, a
+   008E 6F            [ 4]  185 	ld	l, a
+                            186 ;spman.c:48: }
+   008F 33            [ 6]  187 	inc	sp
+   0090 C9            [10]  188 	ret
+                            189 ;spman.c:50: void spman_sprite_flush()
+                            190 ;	---------------------------------
+                            191 ; Function spman_sprite_flush
+                            192 ; ---------------------------------
+   0091                     193 _spman_sprite_flush::
+                            194 ;spman.c:52: sp_last_fixed_sprite = 0;
+   0091 21r01r00      [10]  195 	ld	hl,#_sp_last_fixed_sprite + 0
+   0094 36 00         [10]  196 	ld	(hl), #0x00
+                            197 ;spman.c:53: sp_last_sprite = 0;
+   0096 21r00r00      [10]  198 	ld	hl,#_sp_last_sprite + 0
+   0099 36 00         [10]  199 	ld	(hl), #0x00
+                            200 ;spman.c:54: }
+   009B C9            [10]  201 	ret
+                            202 ;spman.c:56: void spman_alloc_fixed_sprite(struct sprite_attr *sp)
+                            203 ;	---------------------------------
+                            204 ; Function spman_alloc_fixed_sprite
+                            205 ; ---------------------------------
+   009C                     206 _spman_alloc_fixed_sprite::
+   009C DD E5         [15]  207 	push	ix
+   009E DD 21 00 00   [14]  208 	ld	ix,#0
+   00A2 DD 39         [15]  209 	add	ix,sp
+                            210 ;spman.c:65: memcpy(&sp_fixed[sp_last_fixed_sprite++], sp, 4);
+   00A4 01r03r00      [10]  211 	ld	bc, #_sp_fixed+0
+   00A7 FD 21r01r00   [14]  212 	ld	iy, #_sp_last_fixed_sprite
+   00AB FD 5E 00      [19]  213 	ld	e, 0 (iy)
+   00AE FD 34 00      [23]  214 	inc	0 (iy)
+   00B1 16 00         [ 7]  215 	ld	d, #0x00
+   00B3 6B            [ 4]  216 	ld	l, e
+   00B4 62            [ 4]  217 	ld	h, d
+   00B5 29            [11]  218 	add	hl, hl
+   00B6 29            [11]  219 	add	hl, hl
+   00B7 09            [11]  220 	add	hl, bc
+   00B8 EB            [ 4]  221 	ex	de, hl
+   00B9 DD 6E 04      [19]  222 	ld	l, 4 (ix)
+   00BC DD 66 05      [19]  223 	ld	h, 5 (ix)
+   00BF 01 04 00      [10]  224 	ld	bc, #0x0004
+   00C2 ED B0         [21]  225 	ldir
+                            226 ;spman.c:66: }
+   00C4 DD E1         [14]  227 	pop	ix
+   00C6 C9            [10]  228 	ret
+                            229 ;spman.c:68: void spman_alloc_sprite(struct sprite_attr *sp)
+                            230 ;	---------------------------------
+                            231 ; Function spman_alloc_sprite
+                            232 ; ---------------------------------
+   00C7                     233 _spman_alloc_sprite::
+   00C7 DD E5         [15]  234 	push	ix
+   00C9 DD 21 00 00   [14]  235 	ld	ix,#0
+   00CD DD 39         [15]  236 	add	ix,sp
+                            237 ;spman.c:77: memcpy(&sp_buffer[sp_last_sprite++], sp, 4);
+   00CF 01r83r00      [10]  238 	ld	bc, #_sp_buffer+0
+   00D2 FD 21r00r00   [14]  239 	ld	iy, #_sp_last_sprite
+   00D6 FD 5E 00      [19]  240 	ld	e, 0 (iy)
+   00D9 FD 34 00      [23]  241 	inc	0 (iy)
+   00DC 16 00         [ 7]  242 	ld	d, #0x00
+   00DE 6B            [ 4]  243 	ld	l, e
+   00DF 62            [ 4]  244 	ld	h, d
+   00E0 29            [11]  245 	add	hl, hl
+   00E1 29            [11]  246 	add	hl, hl
+   00E2 09            [11]  247 	add	hl, bc
+   00E3 EB            [ 4]  248 	ex	de, hl
+   00E4 DD 6E 04      [19]  249 	ld	l, 4 (ix)
+   00E7 DD 66 05      [19]  250 	ld	h, 5 (ix)
+   00EA 01 04 00      [10]  251 	ld	bc, #0x0004
+   00ED ED B0         [21]  252 	ldir
+                            253 ;spman.c:78: }
+   00EF DD E1         [14]  254 	pop	ix
+   00F1 C9            [10]  255 	ret
+                            256 ;spman.c:84: void spman_update()
+                            257 ;	---------------------------------
+                            258 ; Function spman_update
+                            259 ; ---------------------------------
+   00F2                     260 _spman_update::
+                            261 ;spman.c:86: p = (uint8_t*) 0x1b00;
+   00F2 21 00 1B      [10]  262 	ld	hl, #0x1b00
+   00F5 22rC4r01      [16]  263 	ld	(_p), hl
+                            264 ;spman.c:88: if (sp_last_sprite)
+   00F8 FD 21r00r00   [14]  265 	ld	iy, #_sp_last_sprite
+   00FC FD 7E 00      [19]  266 	ld	a, 0 (iy)
+   00FF B7            [ 4]  267 	or	a, a
+   0100 28 46         [12]  268 	jr	Z,00106$
+                            269 ;spman.c:90: memcpy(&sp_buffer[sp_last_sprite], sp_buffer, sp_last_sprite * 4);
+   0102 01r83r00      [10]  270 	ld	bc, #_sp_buffer+0
+   0105 FD 6E 00      [19]  271 	ld	l, 0 (iy)
+   0108 26 00         [ 7]  272 	ld	h, #0x00
+   010A 29            [11]  273 	add	hl, hl
+   010B 29            [11]  274 	add	hl, hl
+   010C EB            [ 4]  275 	ex	de,hl
+   010D 69            [ 4]  276 	ld	l, c
+   010E 60            [ 4]  277 	ld	h, b
+   010F 19            [11]  278 	add	hl, de
+   0110 D5            [11]  279 	push	de
+   0111 C5            [11]  280 	push	bc
+   0112 E5            [11]  281 	push	hl
+   0113 CDr00r00      [17]  282 	call	___memcpy
+   0116 21 06 00      [10]  283 	ld	hl, #6
+   0119 39            [11]  284 	add	hl, sp
+   011A F9            [ 6]  285 	ld	sp, hl
+                            286 ;spman.c:92: if (sp_last_sprite > 2)
+   011B 3E 02         [ 7]  287 	ld	a, #0x02
+   011D FD 21r00r00   [14]  288 	ld	iy, #_sp_last_sprite
+   0121 FD 96 00      [19]  289 	sub	a, 0 (iy)
+   0124 30 08         [12]  290 	jr	NC,00102$
+                            291 ;spman.c:93: sp_idx += 2;
+   0126 3Ar02r00      [13]  292 	ld	a,(#_sp_idx + 0)
+   0129 C6 02         [ 7]  293 	add	a, #0x02
+   012B 32r02r00      [13]  294 	ld	(_sp_idx+0), a
+   012E                     295 00102$:
+                            296 ;spman.c:95: if (sp_idx >= sp_last_sprite)
+   012E 21r00r00      [10]  297 	ld	hl, #_sp_last_sprite
+   0131 FD 21r02r00   [14]  298 	ld	iy, #_sp_idx
+   0135 FD 7E 00      [19]  299 	ld	a, 0 (iy)
+   0138 96            [ 7]  300 	sub	a, (hl)
+   0139 38 12         [12]  301 	jr	C,00107$
+                            302 ;spman.c:96: sp_idx -= sp_last_sprite;
+   013B 21r00r00      [10]  303 	ld	hl, #_sp_last_sprite
+   013E D5            [11]  304 	push	de
+   013F FD E5         [15]  305 	push	iy
+   0141 D1            [10]  306 	pop	de
+   0142 1A            [ 7]  307 	ld	a, (de)
+   0143 96            [ 7]  308 	sub	a, (hl)
+   0144 12            [ 7]  309 	ld	(de), a
+   0145 D1            [10]  310 	pop	de
+   0146 18 05         [12]  311 	jr	00107$
+   0148                     312 00106$:
+                            313 ;spman.c:99: sp_idx = 0;
+   0148 21r02r00      [10]  314 	ld	hl,#_sp_idx + 0
+   014B 36 00         [10]  315 	ld	(hl), #0x00
+   014D                     316 00107$:
+                            317 ;spman.c:101: memcpy(&sp_buffer[sp_idx + sp_last_sprite], &hide, 4);
+   014D 01r83r00      [10]  318 	ld	bc, #_sp_buffer+0
+   0150 21r02r00      [10]  319 	ld	hl,#_sp_idx + 0
+   0153 5E            [ 7]  320 	ld	e, (hl)
+   0154 16 00         [ 7]  321 	ld	d, #0x00
+   0156 FD 21r00r00   [14]  322 	ld	iy, #_sp_last_sprite
+   015A FD 6E 00      [19]  323 	ld	l, 0 (iy)
+   015D 26 00         [ 7]  324 	ld	h, #0x00
+   015F 19            [11]  325 	add	hl, de
+   0160 29            [11]  326 	add	hl, hl
+   0161 29            [11]  327 	add	hl, hl
+   0162 09            [11]  328 	add	hl, bc
+   0163 EB            [ 4]  329 	ex	de, hl
+   0164 C5            [11]  330 	push	bc
+   0165 21rD6r01      [10]  331 	ld	hl, #_hide
+   0168 01 04 00      [10]  332 	ld	bc, #0x0004
+   016B ED B0         [21]  333 	ldir
+   016D C1            [10]  334 	pop	bc
+                            335 ;spman.c:103: ubox_wait_vsync();
+                            336 ;	
+   016E 76            [ 4]  337 	halt 
+                            338 ;spman.c:104: if (sp_last_fixed_sprite)
+   016F FD 21r01r00   [14]  339 	ld	iy, #_sp_last_fixed_sprite
+   0173 FD 7E 00      [19]  340 	ld	a, 0 (iy)
+   0176 B7            [ 4]  341 	or	a, a
+   0177 28 30         [12]  342 	jr	Z,00112$
+                            343 ;spman.c:106: ubox_write_vm(p, sp_last_fixed_sprite * 4, (uint8_t *)sp_fixed);
+   0179 FD 6E 00      [19]  344 	ld	l, 0 (iy)
+   017C 26 00         [ 7]  345 	ld	h, #0x00
+   017E 29            [11]  346 	add	hl, hl
+   017F 29            [11]  347 	add	hl, hl
+   0180 C5            [11]  348 	push	bc
+   0181 11r03r00      [10]  349 	ld	de, #_sp_fixed
+   0184 D5            [11]  350 	push	de
+   0185 E5            [11]  351 	push	hl
+   0186 2ArC4r01      [16]  352 	ld	hl, (_p)
+   0189 E5            [11]  353 	push	hl
+   018A CDr00r00      [17]  354 	call	_ubox_write_vm
+   018D 21 06 00      [10]  355 	ld	hl, #6
+   0190 39            [11]  356 	add	hl, sp
+   0191 F9            [ 6]  357 	ld	sp, hl
+   0192 C1            [10]  358 	pop	bc
+                            359 ;spman.c:107: p += sp_last_fixed_sprite * 4;
+   0193 FD 21r01r00   [14]  360 	ld	iy, #_sp_last_fixed_sprite
+   0197 FD 6E 00      [19]  361 	ld	l, 0 (iy)
+   019A 26 00         [ 7]  362 	ld	h, #0x00
+   019C 29            [11]  363 	add	hl, hl
+   019D 29            [11]  364 	add	hl, hl
+   019E EB            [ 4]  365 	ex	de,hl
+   019F 21rC4r01      [10]  366 	ld	hl, #_p
+   01A2 7E            [ 7]  367 	ld	a, (hl)
+   01A3 83            [ 4]  368 	add	a, e
+   01A4 77            [ 7]  369 	ld	(hl), a
+   01A5 23            [ 6]  370 	inc	hl
+   01A6 7E            [ 7]  371 	ld	a, (hl)
+   01A7 8A            [ 4]  372 	adc	a, d
+   01A8 77            [ 7]  373 	ld	(hl), a
+   01A9                     374 00112$:
+                            375 ;spman.c:109: ubox_write_vm(p, 4 + sp_last_sprite * 4, (uint8_t *)&sp_buffer[sp_idx]);
+   01A9 FD 21r02r00   [14]  376 	ld	iy, #_sp_idx
+   01AD FD 6E 00      [19]  377 	ld	l, 0 (iy)
+   01B0 26 00         [ 7]  378 	ld	h, #0x00
+   01B2 29            [11]  379 	add	hl, hl
+   01B3 29            [11]  380 	add	hl, hl
+   01B4 09            [11]  381 	add	hl, bc
+   01B5 EB            [ 4]  382 	ex	de, hl
+   01B6 FD 21r00r00   [14]  383 	ld	iy, #_sp_last_sprite
+   01BA FD 6E 00      [19]  384 	ld	l, 0 (iy)
+   01BD 26 00         [ 7]  385 	ld	h, #0x00
+   01BF 29            [11]  386 	add	hl, hl
+   01C0 29            [11]  387 	add	hl, hl
+   01C1 01 04 00      [10]  388 	ld	bc, #0x0004
+   01C4 09            [11]  389 	add	hl, bc
+   01C5 D5            [11]  390 	push	de
+   01C6 E5            [11]  391 	push	hl
+   01C7 2ArC4r01      [16]  392 	ld	hl, (_p)
+   01CA E5            [11]  393 	push	hl
+   01CB CDr00r00      [17]  394 	call	_ubox_write_vm
+   01CE 21 06 00      [10]  395 	ld	hl, #6
+   01D1 39            [11]  396 	add	hl, sp
+   01D2 F9            [ 6]  397 	ld	sp, hl
+                            398 ;spman.c:111: spman_sprite_flush();
+                            399 ;spman.c:112: }
+   01D3 C3r91r00      [10]  400 	jp	_spman_sprite_flush
+   01D6                     401 _hide:
+   01D6 D0                  402 	.db #0xd0	; 208
+   01D7 00                  403 	.db #0x00	; 0
+   01D8 00                  404 	.db #0x00	; 0
+   01D9 00                  405 	.db #0x00	; 0
+                            406 ;spman.c:114: void spman_hide_all_sprites()
+                            407 ;	---------------------------------
+                            408 ; Function spman_hide_all_sprites
+                            409 ; ---------------------------------
+   01DA                     410 _spman_hide_all_sprites::
+                            411 ;spman.c:116: ubox_wait_vsync();
+                            412 ;	
+   01DA 76            [ 4]  413 	halt 
+                            414 ;spman.c:117: ubox_write_vm((uint8_t *)0x1b00, 4, (uint8_t *)hide);
+   01DB 01rD6r01      [10]  415 	ld	bc, #_hide+0
+   01DE C5            [11]  416 	push	bc
+   01DF 21 04 00      [10]  417 	ld	hl, #0x0004
+   01E2 E5            [11]  418 	push	hl
+   01E3 21 00 1B      [10]  419 	ld	hl, #0x1b00
+   01E6 E5            [11]  420 	push	hl
+   01E7 CDr00r00      [17]  421 	call	_ubox_write_vm
+   01EA 21 06 00      [10]  422 	ld	hl, #6
+   01ED 39            [11]  423 	add	hl, sp
+   01EE F9            [ 6]  424 	ld	sp, hl
+                            425 ;spman.c:118: }
+   01EF C9            [10]  426 	ret
+                            427 	.area _CODE
+                            428 	.area _INITIALIZER
+                            429 	.area _CABS (ABS)

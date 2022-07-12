@@ -1,0 +1,9 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/mnt/c/NAS/msxtemplete'
+mkdir -p ./lib
+make -C src/ubox
+make -C src/spman
+make -C src/mplayer
+make -C src/ap
+make: Leaving directory '/mnt/c/NAS/msxtemplete'
+ 
