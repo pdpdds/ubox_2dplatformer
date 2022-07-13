@@ -11,8 +11,7 @@
 ../build/game.rel: game.c ../../include/ubox.h ../../include/spman.h \
  ../../include/ubox.h ../../include/mplayer.h ../../include/ap.h \
  helpers.h main.h game.h ../generated/map_summary.h ../generated/player.h \
- ../generated/enemy.h ../generated/foothold.h foothold_logic.h \
- enemy_logic.h player_logic.h exit_logic.h warp_logic.h item_logic.h
+ ../generated/enemy.h ../generated/foothold.h
 ../build/game_util.rel: game_util.c game_util.h game.h ../../include/ubox.h
 ../build/helpers.rel: helpers.c ../../include/ubox.h helpers.h
 ../build/item_logic.rel: item_logic.c item_logic.h game_util.h

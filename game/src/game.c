@@ -12,18 +12,18 @@
 #define LOCAL
 #include "game.h"
 
-#include "map_summary.h"
+#include <map_summary.h>
 
 #include <player.h>
-#include "enemy.h"
-#include "foothold.h"
+#include <enemy.h>
+#include <foothold.h>
 
-#include "foothold_logic.h"
-#include "enemy_logic.h"
-#include "player_logic.h"
-#include "exit_logic.h"
-#include "warp_logic.h"
-#include "item_logic.h"
+#include <foothold_logic.h>
+#include <enemy_logic.h>
+#include <player_logic.h>
+#include <exit_logic.h>
+#include <warp_logic.h>
+#include <item_logic.h>
 
 #if defined(HXWIN32)
 extern void ubox_render(int object_type, uint8_t flip, uint8_t x, uint8_t y, uint8_t frame);

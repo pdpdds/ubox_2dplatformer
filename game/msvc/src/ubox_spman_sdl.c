@@ -1,4 +1,4 @@
-#include "spman.h"
+#include <spman.h>
 #if !defined(HXWIN32)
 #include <SDL2/SDL.h>
 

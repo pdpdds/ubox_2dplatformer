@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "ubox.h"
-#include "mplayer.h"
+#include <ubox.h>
+#include <mplayer.h>
 #include "helpers.h"
 #include "game.h"
-#include "map_summary.h"
-#include "tiles.h"
+#include <map_summary.h>
+#include <tiles.h>
 
 #define LOCAL
 #include "main.h"
@@ -46,7 +46,7 @@ void draw_menu()
 
         if (ctl != UBOX_MSX_CTL_NONE)
         {
-#if defined(__ANDROID__) || defined(WIN32) || defined(linux) 
+#if defined(__ANDROID__) || defined(WIN32) || defined(__linux) 
             if (ctl == UBOX_MSX_CTL_EXIT)
             {
                 g_gamestate = STATE_EXIT;
@@ -148,7 +148,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     LPSTR     lpCmdLine,
     int       nCmdShow)
 
-#elif defined(WIN32) || defined(linux)
+#elif defined(WIN32) || defined(__linux)
 #include <SDL2/SDL.h>
 int main(int argc, char** argv)
 #elif defined(SKYOS32)

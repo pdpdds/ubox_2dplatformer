@@ -1,4 +1,5 @@
 #include <ubox.h>
+#include <expand.h>
 
 #if defined(WIN32) && !defined(HXWIN32)
 #include <SDL2/SDL.h>
@@ -558,8 +559,6 @@ size_t GetMapDataSize(const uint8_t* map)
 
 	return count;
 }
-
-#include "expand.h"
 
 void ap_uncompress(const uint8_t* dst, const uint8_t* src)
 {

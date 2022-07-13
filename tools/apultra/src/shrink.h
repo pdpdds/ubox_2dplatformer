@@ -33,7 +33,7 @@
 #ifndef _SHRINK_H
 #define _SHRINK_H
 
-#include "divsufsort.h"
+#include <divsufsort.h>
 
 #ifdef __cplusplus
 extern "C" {

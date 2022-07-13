@@ -1,4 +1,4 @@
-#include "mplayer.h"
+#include <mplayer.h>
 #if !defined(HXWIN32)
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
