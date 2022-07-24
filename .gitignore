@@ -52,3 +52,7 @@ Mkfile.old
 dkms.conf
 bin
 game/build
+game/linux/.vscode/configurationCache.log
+game/linux/.vscode/dryrun.log
+game/linux/.vscode/targets.log
+game/linux/platformer
