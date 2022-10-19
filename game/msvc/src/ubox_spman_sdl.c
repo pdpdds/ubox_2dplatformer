@@ -16,7 +16,8 @@ SDL_Surface* screen;
 
 #include <game.h>
 
-#define RAPID_DEVELOPMENT
+//#define RAPID_DEVELOPMENT
+
 
 SDL_Color sprite_pallete[16] =
 {
@@ -57,12 +58,9 @@ typedef struct tag_image_info
 
 }image_info;
 
-
-
 #define MAX_IMAGE_LENGTH 10
 
-image_info g_image_name[10] = { 0, };
-
+image_info g_image_name[MAX_IMAGE_LENGTH] = { 0, };
 cvector_vector_type(pattern_info) g_pattern_info = NULL;
 
 
