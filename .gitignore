@@ -56,3 +56,8 @@ game/linux/.vscode/configurationCache.log
 game/linux/.vscode/dryrun.log
 game/linux/.vscode/targets.log
 game/linux/platformer
+
+
+*.rel
+*.sym
+*.lst
